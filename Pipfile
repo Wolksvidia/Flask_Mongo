@@ -11,6 +11,7 @@ flask = "*"
 flask-restful = "*"
 gunicorn = "*"
 pymongo = "*"
+bcrypt = "*"
 
 
 [dev-packages]
