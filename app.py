@@ -45,11 +45,14 @@ class Register(Resource):
 
 
 def count_token(username):
-    user = users.find_one({'username':username})
-    return user['tokens']
+    return users.find_one({'username':username})['tokens']
 
 def verify_user(username,password):
-    return True
+    hash_pw = users.find_one({'username':username})['password']
+    if bcrypt.hashpw(password.encode('utf-8'), hash_pw) == hash_pw:
+        return True
+    else:
+        return False
 
 
 class Store(Resource):
@@ -80,16 +83,38 @@ class Store(Resource):
 
     
 class Retrive(Resource):
-    def get(self):
-        pass
-    
+    def post(self):
+        data = request.get_json()
+        username = data['username']
+        password = data['password']
+
+        if not verify_user(username, password):
+            return {
+                'status':302,
+                'message':'Wrong user or password'
+                }
+
+        ntoken = count_token(username)
+        if ntoken <= 0:
+            return {
+                'status':301,
+                'message':'You need more tokens'
+                }
+        users.update({'username':username},{'$set':{'tokens':ntoken - 1}})
+        sentence = users.find_one({'username':username})['sentence']
+        return {
+            'status':200,
+            'username': username,
+            'sentence': sentence
+            }
 
 @app.route('/')
 def hello_world():
-    return "Hello World!"
+    return '<h2>Hello World!</h2><br><p>Esta aplicacion intenta ser un juego, en la misma se usa Flask, Flask-Restful y MongoDB con pymongo</p> '
 
 api.add_resource(Register,'/register')
 api.add_resource(Store,'/store')
+api.add_resource(Retrive, '/get')
 
 if __name__=="__main__":
     app.run(host='0.0.0.0',debug=True)
