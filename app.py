@@ -4,6 +4,7 @@ Each user gets 10 tokens
 Store a sentence on our DB for 1 token
 Retrive his stored sentence on out DB for 1 token
 """
+import os
 import bcrypt
 from flask import Flask, jsonify, request
 from flask_restful import Api, Resource
@@ -12,15 +13,9 @@ from pymongo import MongoClient
 app = Flask(__name__)
 api = Api(app)
 
-#client = MongoClient("mongodb://root:root@192.168.64.158:27017/?authSource=test&authMechanism=SCRAM-SHA-1")
-client = MongoClient(
-    '192.168.64.158',
-    port=27017,
-    username='root',
-    password='root',
-    authSource='test',
-    authMechanism='SCRAM-SHA-1'
-    )
+uri = os.getenv('URI')
+
+client = MongoClient(uri)
 
 db = client.test #db
 sentences = db['sentences'] #collection
@@ -75,7 +70,7 @@ class Store(Resource):
                 'message':'You need more tokens'
                 }
 
-        users.update({'username':username},{'$set':{'sentence':sentence,'tokens':ntoken - 1}})
+        users.update_one({'username':username},{'$set':{'sentence':sentence,'tokens':ntoken - 1}})
         return {
             'status':200,
             'message':'Sentence are stored'
@@ -100,7 +95,7 @@ class Retrive(Resource):
                 'status':301,
                 'message':'You need more tokens'
                 }
-        users.update({'username':username},{'$set':{'tokens':ntoken - 1}})
+        users.update_one({'username':username},{'$set':{'tokens':ntoken - 1}})
         sentence = users.find_one({'username':username})['sentence']
         return {
             'status':200,
@@ -110,7 +105,11 @@ class Retrive(Resource):
 
 @app.route('/')
 def hello_world():
-    return '<h2>Hello World!</h2><br><p>Esta aplicacion intenta ser un juego, en la misma se usa Flask, Flask-Restful y MongoDB con pymongo</p> '
+    msg = '<h2>Hello World!</h2><p>Esta aplicacion intenta ser un juego, en la misma se usa Flask, Flask-Restful y MongoDB con pymongo</p>'
+    list_users = users.find()
+    for user in list_users:
+        msg = msg + f"<h4>username: {user['username']} have {user['tokens']} credits.</h4>"
+    return msg
 
 api.add_resource(Register,'/register')
 api.add_resource(Store,'/store')
