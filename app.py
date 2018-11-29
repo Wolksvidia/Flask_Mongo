@@ -15,11 +15,6 @@ api = Api(app)
 
 uri = os.getenv('URI')
 
-#Esto es requerido para tomar los env de Heroku
-if not uri:
-    from boto.s3.connection import S3Connection
-    uri = S3Connection(os.environ['URI'])
-
 client = MongoClient(uri)
 
 db = client.test #db
