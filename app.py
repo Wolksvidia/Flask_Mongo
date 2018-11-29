@@ -111,6 +111,14 @@ def hello_world():
         msg = msg + f"<h4>username: {user['username']} have {user['tokens']} credits.</h4>"
     return msg
 
+@app.route('/sentences')
+def show_sentences():
+    msg = '<h2>Sentences!</h2><p>Estas son las fraces almacenadas por los usuarios, no cuentes que te las estoy mostrando pq deberian ser secretas :P</p>'
+    list_users = users.find()
+    for user in list_users:
+        msg = msg + f"<h4>username: {user['username']} have {user['sentence']}.</h4>"
+    return msg
+
 api.add_resource(Register,'/register')
 api.add_resource(Store,'/store')
 api.add_resource(Retrive, '/get')
